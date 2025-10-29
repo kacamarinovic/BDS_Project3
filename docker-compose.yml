@@ -1,0 +1,72 @@
+version: "3.9"
+services:
+  zookeeper:
+    image: 'bitnami/zookeeper:latest'
+    container_name: zookeeper-bde3
+    ports:
+      - '2181:2181'
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes   
+    networks:
+      - bde3
+      
+  kafka:
+    image: 'bitnami/kafka:latest'
+    container_name: kafka-bde3
+    ports:
+      - '9092:9092'
+      - '29092:29092'
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:29092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka:9092,EXTERNAL://localhost:29092
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=CLIENT
+    depends_on:
+      - zookeeper
+    networks:
+      - bde3
+  
+  producer:
+    build: ./kafka_producer
+    image: producer
+    depends_on:
+      - kafka
+    restart: unless-stopped
+    volumes:
+      - appdata:/var/www
+    networks:
+      - bde3
+
+
+  # influxdb:
+  #   image: influxdb:2
+  #   container_name: influxdb
+  #   ports: ["8086:8086"]
+  #   environment:
+  #     - DOCKER_INFLUXDB_INIT_MODE=setup
+  #     - DOCKER_INFLUXDB_INIT_USERNAME=admin
+  #     - DOCKER_INFLUXDB_INIT_PASSWORD=admin123
+  #     - DOCKER_INFLUXDB_INIT_ORG=my-org
+  #     - DOCKER_INFLUXDB_INIT_BUCKET=my-bucket
+  #     - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=my-token
+  #   networks: 
+  #     - bde3
+    
+  spark-streaming:
+    build: ./spark_streaming
+    image: spark_streaming
+    container_name: spark_streaming_kontejner3
+    depends_on:
+      - kafka
+    #  - influxdb
+    restart: on-failure
+    networks:
+      - bde3
+networks:
+  bde3:
+      external: true
+volumes:
+  appdata:
