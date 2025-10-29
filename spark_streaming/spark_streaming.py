@@ -43,7 +43,6 @@ if __name__ == "__main__":
 
 
     appName = "SparkStreamingApp"
-    #spark = SparkSession.builder.appName(appName).master("spark://spark-master:7077").getOrCreate()
     spark = SparkSession.builder \
         .appName(appName)\
         .getOrCreate()
@@ -110,7 +109,8 @@ if __name__ == "__main__":
         "vehicle_speed",
         "vehicle_type",
         "vehicle_fuel",
-        "vehicle_CO2"
+        "vehicle_CO2",
+        "prediction"
     )
 
     # query = emission_df_predicted.writeStream \
